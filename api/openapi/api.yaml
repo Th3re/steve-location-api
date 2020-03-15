@@ -1,0 +1,63 @@
+---
+swagger: "2.0"
+
+info:
+  title: "{{title}}"
+  version: "1.0"
+
+basePath: /v1.0
+
+consumes:
+  - application/json
+produces:
+  - application/json
+
+definitions:
+  LocationUploadRequest:
+    description: Upload location request
+    type: object
+    required:
+      - userId
+      - coordinates
+    properties:
+      userId:
+        type: string
+        description: Google user's unique identifier
+        example: "108032329945935107776"
+      coordinates:
+        type: string
+        description: Client coordinates
+        example: ""
+  LocationUploadResponse:
+    description: Upload location response
+    type: object
+    properties:
+      code:
+        type: string
+        description: Server status code
+        example: "OK"
+      message:
+        type: string
+        description: Server response
+        example: "Location uploaded"
+      userId:
+        type: string
+        description: Google user's unique identifier
+        example: "108032329945935107776"
+
+paths:
+  /location:
+    post:
+      summary: Upload location
+      description: Upload user's current location
+      parameters:
+        - name: location_request
+          in: body
+          schema:
+            $ref: '#/definitions/LocationUploadRequest'
+      responses:
+        200:
+          description: Location uploaded
+          schema:
+            type: object
+            $ref: '#/definitions/LocationUploadResponse'
