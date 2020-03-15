@@ -1,0 +1,18 @@
+---
+version: '3'
+services:
+  steve-location-api:
+    image: steve-location-api:latest
+    container_name: steve-location-api
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    environment:
+      APP_PORT: '8080'
+    ports:
+      - 8080:8080
+    links:
+      - rabbit
+  rabbit:
+    image: rabbitmq:3
+    container_name: rabbit
