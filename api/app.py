@@ -1,12 +1,21 @@
 import connexion
 from swagger_ui_bundle import swagger_ui_3_path
 
+from api.channel.rabbit import create_connection, create_rabbit_channel
 from api.environment import read_environment
 
 OPENAPI_SPEC_DIR = "openapi/"
 API_SPEC = "api.yaml"
 
-environment = read_environment()
+env = read_environment()
+
+rabbit_connection = create_connection(
+    env.rabbit.host,
+    env.rabbit.port,
+    env.rabbit.connection_attempts,
+    env.rabbit.retry_delay
+)
+channel = create_rabbit_channel(rabbit_connection, env.channel.exchange, env.channel.topic)
 
 
 def main():
@@ -19,4 +28,4 @@ def main():
         arguments={"title": "Location API"},
         resolver=connexion.resolver.RestyResolver("api.api"),
     )
-    app.run(port=environment.port)
+    app.run(port=env.port)

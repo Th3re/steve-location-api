@@ -18,16 +18,27 @@ definitions:
     type: object
     required:
       - userId
-      - coordinates
+      - latitude
+      - longitude
     properties:
       userId:
         type: string
         description: Google user's unique identifier
         example: "108032329945935107776"
-      coordinates:
-        type: string
-        description: Client coordinates
-        example: ""
+      latitude:
+        type: number
+        format: double
+        minimum: -90
+        maximum: 90
+        description: Client latitude
+        example: -77.0364
+      longitude:
+        type: number
+        format: double
+        minimum: -180
+        maximum: 180
+        description: Client longitude
+        example: 38.8951
   LocationUploadResponse:
     description: Upload location response
     type: object
