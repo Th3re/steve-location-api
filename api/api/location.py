@@ -10,21 +10,22 @@ LOG = logging.getLogger(__name__)
 
 def post(location_request):
     LOG.debug(location_request)
+    user_id = location_request['userId']
     response = api.app.channel.send(LocationMessage(
         location=Location(
             latitude=location_request["latitude"],
             longitude=location_request["longitude"]
         ),
-        user_id=location_request["userId"]
+        user_id=user_id
     ))
     if response.status == ChannelResponse.Status.ERROR:
         return {
             "code": APICode.ERROR,
             "message": "Cannot upload location",
-            "userId": "108032329945935107776"
+            "userId": user_id
         }, HTTPStatus.INTERNAL_SERVER_ERROR
     return {
          "code": APICode.OK,
          "message": "Location uploaded",
-         "userId": "108032329945935107776"
+         "userId": user_id
     }, HTTPStatus.OK
