@@ -1,6 +1,6 @@
 import enum
 
 
-class APICode(enum.Enum):
+class APICode(str, enum.Enum):
     OK = "OK"
     ERROR = "ERROR"
