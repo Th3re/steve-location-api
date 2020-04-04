@@ -19,6 +19,7 @@ def post(location_request):
         user_id=user_id
     ))
     if response.status == ChannelResponse.Status.ERROR:
+        LOG.error(response.message)
         return {
             "code": APICode.ERROR,
             "message": "Cannot upload location",

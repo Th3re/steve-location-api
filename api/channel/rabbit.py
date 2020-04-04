@@ -27,12 +27,7 @@ class RabbitChannel(Channel):
 
     def __init__(self, env: Environment):
         self.env = env
-        self.channel = create_connection(
-            env.rabbit.host,
-            env.rabbit.port,
-            env.rabbit.connection_attempts,
-            env.rabbit.retry_delay
-        )
+        self.channel = None
         self.exchange = env.channel.exchange
         self.topic = env.channel.topic
 
@@ -78,8 +73,8 @@ class RabbitChannel(Channel):
         for _ in range(self.ATTEMPTS):
             try:
                 return self._send_attempt(message)
-            except ConnectionError:
-                self.channel = self.channel = create_connection(
+            except Exception:
+                self.channel = create_connection(
                     self.env.rabbit.host,
                     self.env.rabbit.port,
                     self.env.rabbit.connection_attempts,
