@@ -4,6 +4,7 @@ import logging
 import pika.exceptions
 
 from api.channel.channel import Channel, LocationMessage, ChannelResponse
+from api.environment import Environment
 
 LOG = logging.getLogger(__name__)
 
@@ -15,18 +16,25 @@ def create_connection(host, port, connection_attempts, retry_delay):
     return channel
 
 
-def create_rabbit_channel(channel, exchange, topic):
-    rabbit_channel = RabbitChannel(channel, exchange=exchange, topic=topic)
+def create_rabbit_channel(env: Environment):
+    rabbit_channel = RabbitChannel(env)
     return rabbit_channel
 
 
 class RabbitChannel(Channel):
+    ATTEMPTS = 10
     __exchange_type = 'topic'
 
-    def __init__(self, channel, exchange, topic):
-        self.channel = channel
-        self.exchange = exchange
-        self.topic = topic
+    def __init__(self, env: Environment):
+        self.env = env
+        self.channel = create_connection(
+            env.rabbit.host,
+            env.rabbit.port,
+            env.rabbit.connection_attempts,
+            env.rabbit.retry_delay
+        )
+        self.exchange = env.channel.exchange
+        self.topic = env.channel.topic
 
     @staticmethod
     def __serialize_message(message: LocationMessage):
@@ -37,7 +45,7 @@ class RabbitChannel(Channel):
         ))
         return body
 
-    def send(self, message: LocationMessage) -> ChannelResponse:
+    def _send_attempt(self, message: LocationMessage) -> ChannelResponse:
         try:
             self.channel.exchange_declare(exchange=self.exchange, exchange_type=self.__exchange_type)
         except pika.exceptions.AMQPError as amqp_error:
@@ -65,3 +73,15 @@ class RabbitChannel(Channel):
             message=f"Location uploaded for user {user_id}",
             status=ChannelResponse.Status.OK,
         )
+
+    def send(self, message: LocationMessage) -> ChannelResponse:
+        for _ in range(self.ATTEMPTS):
+            try:
+                return self._send_attempt(message)
+            except ConnectionError:
+                self.channel = self.channel = create_connection(
+                    self.env.rabbit.host,
+                    self.env.rabbit.port,
+                    self.env.rabbit.connection_attempts,
+                    self.env.rabbit.retry_delay
+                )

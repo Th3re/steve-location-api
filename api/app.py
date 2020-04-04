@@ -9,13 +9,7 @@ API_SPEC = "api.yaml"
 
 env = read_environment()
 
-rabbit_connection = create_connection(
-    env.rabbit.host,
-    env.rabbit.port,
-    env.rabbit.connection_attempts,
-    env.rabbit.retry_delay
-)
-channel = create_rabbit_channel(rabbit_connection, env.channel.exchange, env.channel.topic)
+channel = create_rabbit_channel(env)
 
 
 def main():
