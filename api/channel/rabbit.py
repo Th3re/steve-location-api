@@ -41,42 +41,35 @@ class RabbitChannel(Channel):
         return body
 
     def _send_attempt(self, message: LocationMessage) -> ChannelResponse:
-        try:
-            self.channel.exchange_declare(exchange=self.exchange, exchange_type=self.__exchange_type)
-        except pika.exceptions.AMQPError as amqp_error:
-            LOG.error(amqp_error)
-            return ChannelResponse(
-                message=f"Cannot declare exchange {self.exchange} of type {self.__exchange_type}",
-                status=ChannelResponse.Status.ERROR,
-            )
+        self.channel.exchange_declare(exchange=self.exchange, exchange_type=self.__exchange_type)
         user_id = message.user_id
         routing_key = f'{self.topic}.{user_id}'
         body = self.__serialize_message(message)
-        try:
-            self.channel.basic_publish(
-                exchange=self.exchange,
-                routing_key=routing_key,
-                body=body,
-            )
-        except pika.exceptions.AMQPError as amqp_error:
-            LOG.error(amqp_error)
-            return ChannelResponse(
-                message=f"Cannot publish message to {routing_key}",
-                status=ChannelResponse.Status.ERROR,
-            )
+        self.channel.basic_publish(
+            exchange=self.exchange,
+            routing_key=routing_key,
+            body=body,
+        )
         return ChannelResponse(
             message=f"Location uploaded for user {user_id}",
             status=ChannelResponse.Status.OK,
         )
 
     def send(self, message: LocationMessage) -> ChannelResponse:
-        for _ in range(self.ATTEMPTS):
+        try:
+            return self._send_attempt(message)
+        except Exception as amqp_error:
+            LOG.error(amqp_error)
             try:
-                return self._send_attempt(message)
-            except Exception:
                 self.channel = create_connection(
                     self.env.rabbit.host,
                     self.env.rabbit.port,
                     self.env.rabbit.connection_attempts,
                     self.env.rabbit.retry_delay
+                )
+                return self._send_attempt(message)
+            except:
+                return ChannelResponse(
+                    message=f"Cannot publish message to {self.env.channel.topic}",
+                    status=ChannelResponse.Status.ERROR,
                 )
