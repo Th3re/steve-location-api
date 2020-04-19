@@ -18,8 +18,8 @@ class Rabbit(EnvironmentReader):
         super()
         self.host = self.get('host')
         self.port = self.get('port')
-        self.connection_attempts = self.get('connection_attempts')
-        self.retry_delay = self.get('retry_delay')
+        self.connection_attempts = int(self.get('connection_attempts'))
+        self.retry_delay = int(self.get('retry_delay'))
 
 
 class Server(EnvironmentReader):
