@@ -2,7 +2,7 @@ import logging
 
 import pika.exceptions
 
-from api.channel.channel import Channel, ChannelResponse
+from api.libs.channel.channel import Channel, ChannelResponse
 from api.environment import Environment
 
 LOG = logging.getLogger(__name__)
