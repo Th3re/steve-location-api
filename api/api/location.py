@@ -3,7 +3,7 @@ from http import HTTPStatus
 
 import api.app
 from api.api.api import APICode
-from api.channel.channel import LocationMessage
+from api.channel.location_message import LocationMessage
 from api.libs.channel.channel import ChannelResponse
 
 LOG = logging.getLogger(__name__)

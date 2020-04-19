@@ -2,7 +2,7 @@ import connexion
 import logging
 from swagger_ui_bundle import swagger_ui_3_path
 
-from api.channel.rabbit import create_rabbit_channel
+from api.libs.channel.rabbit.channel import RabbitChannel
 from api.environment import Environment
 
 
@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.DEBUG)
 env = Environment.read()
 
 
-channel = create_rabbit_channel(env)
+channel = RabbitChannel.create(env.channel, env.rabbit)
 
 
 def main():
