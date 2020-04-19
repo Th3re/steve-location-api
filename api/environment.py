@@ -1,7 +1,7 @@
 import logging
 
 from api.libs.environment.environmentreader import EnvironmentReader
-from api.libs.representation.environment import EnvPrint
+from api.libs.representation.pretty import PrettyPrint
 
 LOG = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class Server(EnvironmentReader):
         self.port = self.get('port')
 
 
-class Environment(EnvPrint):
+class Environment(PrettyPrint):
     def __init__(self):
         self.server = Server()
         self.rabbit = Rabbit()
