@@ -1,9 +1,8 @@
-import json
 import logging
 
 import pika.exceptions
 
-from api.channel.channel import Channel, LocationMessage, ChannelResponse
+from api.channel.channel import Channel, ChannelResponse
 from api.environment import Environment
 
 LOG = logging.getLogger(__name__)
@@ -31,35 +30,24 @@ class RabbitChannel(Channel):
         self.exchange = env.channel.exchange
         self.topic = env.channel.topic
 
-    @staticmethod
-    def __serialize_message(message: LocationMessage):
-        location = message.location
-        body = json.dumps(dict(
-            longitude=location.longitude,
-            latitude=location.latitude,
-        ))
-        return body
-
-    def _send_attempt(self, message: LocationMessage) -> ChannelResponse:
+    def _send_attempt(self, topic, data) -> ChannelResponse:
         self.channel.exchange_declare(exchange=self.exchange, exchange_type=self.__exchange_type)
-        user_id = message.user_id
-        routing_key = f'{self.topic}.{user_id}'
-        body = self.__serialize_message(message)
+        routing_key = f'{self.topic}.{topic}'
         self.channel.basic_publish(
             exchange=self.exchange,
             routing_key=routing_key,
-            body=body,
+            body=data,
         )
         return ChannelResponse(
-            message=f"Location uploaded for user {user_id}",
+            message=f"Message uploaded to topic {topic}",
             status=ChannelResponse.Status.OK,
         )
 
-    def send(self, message: LocationMessage) -> ChannelResponse:
+    def send(self, topic, data) -> ChannelResponse:
         try:
-            return self._send_attempt(message)
+            return self._send_attempt(topic, data)
         except Exception as amqp_error:
-            LOG.error(amqp_error)
+            LOG.error(f'Send attempt error: {amqp_error}')
             try:
                 self.channel = create_connection(
                     self.env.rabbit.host,
@@ -67,8 +55,9 @@ class RabbitChannel(Channel):
                     self.env.rabbit.connection_attempts,
                     self.env.rabbit.retry_delay
                 )
-                return self._send_attempt(message)
-            except:
+                return self._send_attempt(topic, data)
+            except Exception as general_exception:
+                LOG.error(f'Unexpected exception after reconnecting to rabbit: {general_exception}')
                 return ChannelResponse(
                     message=f"Cannot publish message to {self.env.channel.topic}",
                     status=ChannelResponse.Status.ERROR,

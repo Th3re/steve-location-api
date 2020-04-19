@@ -1,14 +1,17 @@
 import abc
 import enum
-from collections import namedtuple
-
-Location = namedtuple("Location", ["latitude", "longitude"])
+import json
 
 
-class LocationMessage:
-    def __init__(self, location: Location, user_id: str):
-        self.location = location
-        self.user_id = user_id
+class Message(abc.ABC):
+    @abc.abstractmethod
+    def serialize(self):
+        pass
+
+    @classmethod
+    @abc.abstractmethod
+    def deserialize(cls, raw):
+        pass
 
 
 class ChannelResponse:
@@ -23,5 +26,22 @@ class ChannelResponse:
 
 class Channel(abc.ABC):
     @abc.abstractmethod
-    def send(self, message: LocationMessage) -> ChannelResponse:
+    def send(self, topic, data) -> ChannelResponse:
         pass
+
+
+class LocationMessage(Message):
+    def __init__(self, latitude, longitude):
+        self.longitude = longitude
+        self.latitude = latitude
+
+    def serialize(self):
+        return json.dumps(dict(dict(
+            longitude=self.longitude,
+            latitude=self.latitude,
+        )))
+
+    @classmethod
+    def deserialize(cls, raw):
+        data = json.loads(raw)
+        return LocationMessage(latitude=data['latitude'], longitude=data['longitude'])
